@@ -186,102 +186,102 @@ DEFINE_EVENT
 	    //SEND_COMMAND vdvDev,"'PROPERTY-Poll_Time,60'"
 	}
 	COMMAND : {
-		//---Parse commands send to the virtual from Master code.
-		//---Que up the appropriate requests to the device
-		
-		STACK_VAR CHAR cCmd[16]
-		STACK_VAR INTEGER nPara
-		STACK_VAR CHAR cPara[8][128]
-		
-		cCmd = DuetParseCmdHeader(DATA.TEXT)
-		
-		nPara = 1
-		WHILE(FIND_STRING(DATA.TEXT,',',1)) {
-		    cPara[nPara] = DuetParseCmdParam(DATA.TEXT)
-		    nPara++
-		}
+	    //---Parse commands send to the virtual from Master code.
+	    //---Que up the appropriate requests to the device
+	    
+	    STACK_VAR CHAR cCmd[16]
+	    STACK_VAR INTEGER nPara
+	    STACK_VAR CHAR cPara[8][128]
+	    
+	    cCmd = DuetParseCmdHeader(DATA.TEXT)
+	    
+	    nPara = 1
+	    WHILE(FIND_STRING(DATA.TEXT,',',1)) {
 		cPara[nPara] = DuetParseCmdParam(DATA.TEXT)
+		nPara++
+	    }
+	    cPara[nPara] = DuetParseCmdParam(DATA.TEXT)
+	    
+	    SELECT {
 		
-		SELECT {
+		(*********************************************************************)
+		
+		ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='HOME')) : AddHTTPGet('Keypress/Home')
+		ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='REV')) : AddHTTPGet('Keypress/Rev')
+		ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='FWD')) : AddHTTPGet('Keypress/Fwd')
+		ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='PLAY')) : AddHTTPGet('Keypress/Play')
+		ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='SELECT')) : AddHTTPGet('Keypress/Select')
+		ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='LEFT')) : AddHTTPGet('Keypress/Left')
+		ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='RIGHT')) : AddHTTPGet('Keypress/Right')
+		ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='DOWN')) : AddHTTPGet('Keypress/Down')
+		ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='UP')) : AddHTTPGet('Keypress/Up')
+		ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='BACK')) : AddHTTPGet('Keypress/Back')
+		ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='REPLAY')) : AddHTTPGet('Keypress/InstantReplay')
+		ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='INFO')) : AddHTTPGet('Keypress/Info')
+		ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='BACKSPACE')) : AddHTTPGet('Keypress/Backspace')
+		ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='SEARCH')) : AddHTTPGet('Keypress/Search')
+		ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='ENTER')) : AddHTTPGet('Keypress/Enter')
+		
+		ACTIVE (cCmd=='KEYBOARD') : AddHTTPGet("'Keypress/Lit_',cPara[1]")
+		
+		
+		(*********************************************************************)
+		
+		//---Commands below are module-specific, and don't necessarily have direct
+		//---requests to the device associated.  These are how the module is instantiated
+		//---and/or modified at runtime.
+		
+		ACTIVE (cCmd=='PASSTHRU_GET') : {
+		    AddHTTPGet(cPara[1])
+		}
+		
+		ACTIVE (cCmd=='DEBUG') : {
+		    Roku.Debug.nDebugLevel = ATOI(cPara[1])
+		    SEND_STRING vdvDev,"'DEBUG-',cPara[1]"
+		    DebugString(0,"'DEBUG Level = ',cPara[1]")
+		}
+		ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='IP_Address')) : {
+		    Roku.Comm.cIPAddress = cPara[2]
+		    SEND_STRING vdvDev,"'PROPERTY-IP_Address,',cPara[2]"
+		    DebugString(3,"'IP Address: ',cPara[2]")
+		}
+		ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='TCP_Port')) : {
+		    Roku.Comm.nTCPPort = ATOI(cPara[2])
+		    SEND_STRING vdvDev,"'PROPERTY-TCP_Port,',cPara[2]"
+		    DebugString(3,"'TCP Port : ',cPara[2]")
+		}
+		ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='Poll_Time')) : {
+		    Roku.Comm.lPollTime = ATOI(cPara[2])*1000
+		    lTimes[MaxPollCmds+1] = Roku.Comm.lPollTime
+		    SEND_STRING vdvDev,"'PROPERTY-Poll_Time,',ITOA(Roku.Comm.lPollTime)"
 		    
-		    (*********************************************************************)
+		    IF(TIMELINE_ACTIVE(tlPolling))
+			TIMELINE_KILL(tlPolling)
 		    
-		    ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='HOME')) : AddHTTPGet('Keypress/Home')
-		    ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='REV')) : AddHTTPGet('Keypress/Rev')
-		    ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='FWD')) : AddHTTPGet('Keypress/Fwd')
-		    ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='PLAY')) : AddHTTPGet('Keypress/Play')
-		    ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='SELECT')) : AddHTTPGet('Keypress/Select')
-		    ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='LEFT')) : AddHTTPGet('Keypress/Left')
-		    ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='RIGHT')) : AddHTTPGet('Keypress/Right')
-		    ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='DOWN')) : AddHTTPGet('Keypress/Down')
-		    ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='UP')) : AddHTTPGet('Keypress/Up')
-		    ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='BACK')) : AddHTTPGet('Keypress/Back')
-		    ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='REPLAY')) : AddHTTPGet('Keypress/InstantReplay')
-		    ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='INFO')) : AddHTTPGet('Keypress/Info')
-		    ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='BACKSPACE')) : AddHTTPGet('Keypress/Backspace')
-		    ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='SEARCH')) : AddHTTPGet('Keypress/Search')
-		    ACTIVE ((cCmd=='KEYPRESS') && (UPPER_STRING(cPara[1])=='ENTER')) : AddHTTPGet('Keypress/Enter')
-		    
-		    ACTIVE (cCmd=='KEYBOARD') : AddHTTPGet("'Keypress/Lit_',cPara[1]")
-		    
-		    
-		    (*********************************************************************)
-		    
-		    //---Commands below are module-specific, and don't necessarily have direct
-		    //---requests to the device associated.  These are how the module is instantiated
-		    //---and/or modified at runtime.
-		    
-		    ACTIVE (cCmd=='PASSTHRU_GET') : {
-			AddHTTPGet(cPara[1])
-		    }
-		    
-		    ACTIVE (cCmd=='DEBUG') : {
-			Roku.Debug.nDebugLevel = ATOI(cPara[1])
-			SEND_STRING vdvDev,"'DEBUG-',cPara[1]"
-			DebugString(0,"'DEBUG Level = ',cPara[1]")
-		    }
-		    ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='IP_Address')) : {
-			Roku.Comm.cIPAddress = cPara[2]
-			SEND_STRING vdvDev,"'PROPERTY-IP_Address,',cPara[2]"
-			DebugString(3,"'IP Address: ',cPara[2]")
-		    }
-		    ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='TCP_Port')) : {
-			Roku.Comm.nTCPPort = ATOI(cPara[2])
-			SEND_STRING vdvDev,"'PROPERTY-TCP_Port,',cPara[2]"
-			DebugString(3,"'TCP Port : ',cPara[2]")
-		    }
-		    ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='Poll_Time')) : {
-			Roku.Comm.lPollTime = ATOI(cPara[2])*1000
-			lTimes[MaxPollCmds+1] = Roku.Comm.lPollTime
-			SEND_STRING vdvDev,"'PROPERTY-Poll_Time,',ITOA(Roku.Comm.lPollTime)"
-			
-			IF(TIMELINE_ACTIVE(tlPolling))
-			    TIMELINE_KILL(tlPolling)
-			
-			IF(Roku.Comm.lPollTime > 0)
-			    TIMELINE_CREATE(tlPolling,lTimes,MaxPollCmds+1,TIMELINE_RELATIVE,TIMELINE_REPEAT)
-		    }
-		    ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='Progress_Poll')) : {
-			Roku.nProgressPoll = ATOI(cPara[2])
-			SEND_STRING vdvDev,"'PROPERTY-Progress_Poll,',ITOA(Roku.nProgressPoll)"
-		    }
-		    
-		    ACTIVE (cCmd=='CLEARQUE') : {
-			Roku.Comm.cQue = ''
-		    }
-		    ACTIVE (cCmd=='CLEARBUF') : {
-			Roku.Comm.cBuf = ''
+		    IF(Roku.Comm.lPollTime > 0)
+			TIMELINE_CREATE(tlPolling,lTimes,MaxPollCmds+1,TIMELINE_RELATIVE,TIMELINE_REPEAT)
+		}
+		ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='Progress_Poll')) : {
+		    Roku.nProgressPoll = ATOI(cPara[2])
+		    SEND_STRING vdvDev,"'PROPERTY-Progress_Poll,',ITOA(Roku.nProgressPoll)"
+		}
+		
+		ACTIVE (cCmd=='CLEARQUE') : {
+		    Roku.Comm.cQue = ''
+		}
+		ACTIVE (cCmd=='CLEARBUF') : {
+		    Roku.Comm.cBuf = ''
+		    OFF[Roku.Comm.nBusy]
+		}
+		ACTIVE (cCmd=='REINIT') : {
+		    Roku.Comm.cQue = ''
+		    Roku.Comm.cBuf = ''
+		    ON[Roku.Comm.nBusy]
+		    IP_CLIENT_CLOSE(dvDev.PORT)
+		    WAIT 10
 			OFF[Roku.Comm.nBusy]
-		    }
-		    ACTIVE (cCmd=='REINIT') : {
-			Roku.Comm.cQue = ''
-			Roku.Comm.cBuf = ''
-			ON[Roku.Comm.nBusy]
-			IP_CLIENT_CLOSE(dvDev.PORT)
-			WAIT 10
-			    OFF[Roku.Comm.nBusy]
-		    }
-		    
+		}
+		
 		//---When all else fails, throw up an error flag!
 		ACTIVE (1) : DebugString(1,"'ERROR - Unhandled Command'")
 	    }
