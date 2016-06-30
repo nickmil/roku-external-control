@@ -6,7 +6,7 @@ DEFINE_DEVICE
     vdvRoku = 33001:1:0
     
 DEFINE_MODULE 'Roku_Comm' comm1(vdvRoku,dvIP_Roku)
-DEFINE_MODULE 'Roku_UI' 	ui1(vdvRoku,dvTP_Roku)
+DEFINE_MODULE 'Roku_UI' ui1(vdvRoku,dvTP_Roku)
 
 DEFINE_EVENT
     DATA_EVENT [vdvRoku] {
