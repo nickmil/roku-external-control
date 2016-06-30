@@ -136,8 +136,16 @@
 <UserName></UserName>
 <Password></Password>
 <Comments></Comments>
+<File CompileType="Netlinx" Type="Module"><Identifier>Roku_Comm</Identifier>
+<FilePathName>Roku_Comm.axs</FilePathName>
+<Comments></Comments>
+</File>
 <File CompileType="Netlinx" Type="MasterSrc"><Identifier>Roku_ExternalControl_Master</Identifier>
 <FilePathName>Roku_ExternalControl_Master.axs</FilePathName>
+<Comments></Comments>
+</File>
+<File CompileType="Netlinx" Type="Module"><Identifier>Roku_UI</Identifier>
+<FilePathName>Roku_UI.axs</FilePathName>
 <Comments></Comments>
 </File>
 </System>
