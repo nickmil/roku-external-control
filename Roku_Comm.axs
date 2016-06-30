@@ -4,6 +4,7 @@ MODULE_NAME='Roku_Comm' (DEV vdvDev,DEV dvDev)
 DEFINE_TYPE
     STRUCTURE _Debug {
 	INTEGER nDebugLevel		//---Current level of debug strings sent to console (See DebugString subroutine below)
+	CHAR cDPS[32]
     }
     STRUCTURE _Comm {
 	CHAR cIPAddress[15]		//---IP Address of the Boxee Box (? Increase byte count to allow for hostnames ?)
@@ -44,7 +45,7 @@ DEFINE_FUNCTION DebugString(INTEGER nLevel,CHAR cString[]) {
     //---4-All Data & parsing)
     
     IF(nLevel<=Roku.Debug.nDebugLevel) {
-	SEND_STRING 0,"'BoxeeBox - ',cString"
+	SEND_STRING 0,"'Roku  ',Roku.Debug.cDPS,' - ',cString"
     }
 }
 
@@ -70,7 +71,7 @@ DEFINE_FUNCTION AddHTTPGet(CHAR cShortURI[]) {
     STACK_VAR CHAR cHeader[512]
     
     cURLString = "'/',cShortURI"
-    DebugString(4,"'Add to Que: HTTP://',Roku.Comm.cIPAddress,cURLString")
+    DebugString(AMX_DEBUG,"'Add to Que: HTTP://',Roku.Comm.cIPAddress,cURLString")
     
     cHeader = "'GET ',cURLString,' HTTP/1.1',$0D,$0A"
     cHeader = "cHeader,'Host: ',Roku.Comm.cIPAddress,$0D,$0A"
@@ -81,7 +82,7 @@ DEFINE_FUNCTION AddHTTPGet(CHAR cShortURI[]) {
     cHeader = "cHeader,'Connection: keep-alive',$0D,$0A,$0D,$0A"
     
     Roku.Comm.cQue = "Roku.Comm.cQue,cHeader,$0B,$0B"
-    DebugString(3,"'AddHTTPGet : ',cShortURI")
+    DebugString(AMX_INFO,"'AddHTTPGet : ',cShortURI")
 }
 
 
@@ -108,10 +109,10 @@ DEFINE_CALL 'OpenSocket' {
     }
     IF(nError) {
 	SEND_STRING vdvDev,"'ERROR-Socket Connection Error: ',cError"
-	DebugString(1,"'ERROR-Socket Connection Error: ',cError")
+	DebugString(AMX_ERROR,"'ERROR-Socket Connection Error: ',cError")
     }
     ELSE {
-	DebugString(3,"'OpenSocket - Socket opened successfully'")
+	DebugString(AMX_INFO,"'OpenSocket - Socket opened successfully'")
     }
 }
 
@@ -130,17 +131,17 @@ DEFINE_FUNCTION DevRx(CHAR cBuf[]) {
     STACK_VAR INTEGER nTempPara
     STACK_VAR INTEGER nPointer
     
-    //DebugString(4,"'Parsing : ',cBuf")
+    //DebugString(AMX_DEBUG,"'Parsing : ',cBuf")
     
     REMOVE_STRING(cBuf,"$0D,$0A,$0D,$0A,'b',$0D,$0A",1)
     SET_LENGTH_STRING(cBuf,LENGTH_STRING(cBuf)-7)
     
-    //DebugString(4,"'Parse-able data : ',cBuf")
+    //DebugString(AMX_DEBUG,"'Parse-able data : ',cBuf")
     //---Responses are too long for a single line in debug
     //---Break it up into usable chunks.
     nPointer = 1
     WHILE(LENGTH_STRING(cBuf)>nPointer) {
-	DebugString(4,"'Parsing : ',MID_STRING(cBuf,nPointer,120)")
+	DebugString(AMX_DEBUG,"'Parsing : ',MID_STRING(cBuf,nPointer,120)")
 	nPointer = nPointer+120
     }
     
@@ -149,29 +150,29 @@ DEFINE_FUNCTION DevRx(CHAR cBuf[]) {
     
     SELECT {
 	//---HTTP Error Codes from Device
-	ACTIVE (FIND_STRING(cHTTPResponseCode,'401',1)) : DebugString(1,'ERROR - HTTP Response Code: 401, Unauthorized')
-	ACTIVE (FIND_STRING(cHTTPResponseCode,'402',1)) : DebugString(1,'ERROR - HTTP Response Code: 402, Payment Required')
-	ACTIVE (FIND_STRING(cHTTPResponseCode,'403',1)) : DebugString(1,'ERROR - HTTP Response Code: 403, Forbidden')
-	ACTIVE (FIND_STRING(cHTTPResponseCode,'404',1)) : DebugString(1,'ERROR - HTTP Response Code: 404, Not Found')
-	ACTIVE (FIND_STRING(cHTTPResponseCode,'405',1)) : DebugString(1,'ERROR - HTTP Response Code: 405, Method Not Allowed')
-	ACTIVE (FIND_STRING(cHTTPResponseCode,'406',1)) : DebugString(1,'ERROR - HTTP Response Code: 406, Not Acceptible')
-	ACTIVE (FIND_STRING(cHTTPResponseCode,'407',1)) : DebugString(1,'ERROR - HTTP Response Code: 407, Proxy Auth Required')
-	ACTIVE (FIND_STRING(cHTTPResponseCode,'408',1)) : DebugString(1,'ERROR - HTTP Response Code: 408, Request Timeout')
-	ACTIVE (FIND_STRING(cHTTPResponseCode,'409',1)) : DebugString(1,'ERROR - HTTP Response Code: 409, Conflict')
-	ACTIVE (FIND_STRING(cHTTPResponseCode,'410',1)) : DebugString(1,'ERROR - HTTP Response Code: 410, Gone')
-	ACTIVE (FIND_STRING(cHTTPResponseCode,'411',1)) : DebugString(1,'ERROR - HTTP Response Code: 411, Length Required')
-	ACTIVE (FIND_STRING(cHTTPResponseCode,'412',1)) : DebugString(1,'ERROR - HTTP Response Code: 412, Precondition Failed')
-	ACTIVE (FIND_STRING(cHTTPResponseCode,'413',1)) : DebugString(1,'ERROR - HTTP Response Code: 413, Request Entity Too Large')
-	ACTIVE (FIND_STRING(cHTTPResponseCode,'414',1)) : DebugString(1,'ERROR - HTTP Response Code: 414, Request URI Too Long')
+	ACTIVE (FIND_STRING(cHTTPResponseCode,'401',1)) : DebugString(AMX_ERROR,'ERROR - HTTP Response Code: 401, Unauthorized')
+	ACTIVE (FIND_STRING(cHTTPResponseCode,'402',1)) : DebugString(AMX_ERROR,'ERROR - HTTP Response Code: 402, Payment Required')
+	ACTIVE (FIND_STRING(cHTTPResponseCode,'403',1)) : DebugString(AMX_ERROR,'ERROR - HTTP Response Code: 403, Forbidden')
+	ACTIVE (FIND_STRING(cHTTPResponseCode,'404',1)) : DebugString(AMX_ERROR,'ERROR - HTTP Response Code: 404, Not Found')
+	ACTIVE (FIND_STRING(cHTTPResponseCode,'405',1)) : DebugString(AMX_ERROR,'ERROR - HTTP Response Code: 405, Method Not Allowed')
+	ACTIVE (FIND_STRING(cHTTPResponseCode,'406',1)) : DebugString(AMX_ERROR,'ERROR - HTTP Response Code: 406, Not Acceptible')
+	ACTIVE (FIND_STRING(cHTTPResponseCode,'407',1)) : DebugString(AMX_ERROR,'ERROR - HTTP Response Code: 407, Proxy Auth Required')
+	ACTIVE (FIND_STRING(cHTTPResponseCode,'408',1)) : DebugString(AMX_ERROR,'ERROR - HTTP Response Code: 408, Request Timeout')
+	ACTIVE (FIND_STRING(cHTTPResponseCode,'409',1)) : DebugString(AMX_ERROR,'ERROR - HTTP Response Code: 409, Conflict')
+	ACTIVE (FIND_STRING(cHTTPResponseCode,'410',1)) : DebugString(AMX_ERROR,'ERROR - HTTP Response Code: 410, Gone')
+	ACTIVE (FIND_STRING(cHTTPResponseCode,'411',1)) : DebugString(AMX_ERROR,'ERROR - HTTP Response Code: 411, Length Required')
+	ACTIVE (FIND_STRING(cHTTPResponseCode,'412',1)) : DebugString(AMX_ERROR,'ERROR - HTTP Response Code: 412, Precondition Failed')
+	ACTIVE (FIND_STRING(cHTTPResponseCode,'413',1)) : DebugString(AMX_ERROR,'ERROR - HTTP Response Code: 413, Request Entity Too Large')
+	ACTIVE (FIND_STRING(cHTTPResponseCode,'414',1)) : DebugString(AMX_ERROR,'ERROR - HTTP Response Code: 414, Request URI Too Long')
 	
 	//---Acknowledgement of Properly encoded message
 	ACTIVE (FIND_STRING(cHTTPResponseCode,'200 OK',1)) : {
-	    DebugString(4,'HTTP Response Code: 200, OK!')
+	    DebugString(AMX_DEBUG,'HTTP Response Code: 200, OK!')
 	    
 	    nHTMLStart = FIND_STRING(cBuf,'<html>',1)
 	    nHTMLEnd = FIND_STRING(cBuf,'</html>',1)
 	    cHTML = MID_STRING(cBuf,nHTMLStart,(nHTMLEnd-nHTMLStart))
-	    DebugString(4,"'HTML Content - ',cHTML")
+	    DebugString(AMX_DEBUG,"'HTML Content - ',cHTML")
 	    
 	}
     }
@@ -182,6 +183,8 @@ DEFINE_FUNCTION DevRx(CHAR cBuf[]) {
 DEFINE_EVENT
     DATA_EVENT [vdvDev] {
 	ONLINE : {
+	    Roku.Debug.cDPS = "ITOA(DATA.DEVICE.NUMBER),':',ITOA(DATA.DEVICE.PORT),':',ITOA(DATA.DEVICE.SYSTEM)"
+	    
 	    //---Default poll time
 	    //SEND_COMMAND vdvDev,"'PROPERTY-Poll_Time,60'"
 	}
@@ -257,6 +260,36 @@ DEFINE_EVENT
 		    
 		    IF(TIMELINE_ACTIVE(tlPolling))
 			TIMELINE_KILL(tlPolling)
+		    ACTIVE (cCmd=='DEBUG') : {
+			Roku.Debug.nDebugLevel = ATOI(cPara[1])
+			SEND_STRING vdvDev,"'DEBUG-',cPara[1]"
+			DebugString(0,"'DEBUG Level = ',cPara[1]")
+		    }
+		    ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='IP_Address')) : {
+			Roku.Comm.cIPAddress = cPara[2]
+			SEND_STRING vdvDev,"'PROPERTY-IP_Address,',cPara[2]"
+			DebugString(AMX_INFO,"'IP Address: ',cPara[2]")
+		    }
+		    ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='TCP_Port')) : {
+			Roku.Comm.nTCPPort = ATOI(cPara[2])
+			SEND_STRING vdvDev,"'PROPERTY-TCP_Port,',cPara[2]"
+			DebugString(AMX_INFO,"'TCP Port : ',cPara[2]")
+		    }
+		    ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='Poll_Time')) : {
+			Roku.Comm.lPollTime = ATOI(cPara[2])*1000
+			lTimes[MaxPollCmds+1] = Roku.Comm.lPollTime
+			SEND_STRING vdvDev,"'PROPERTY-Poll_Time,',ITOA(Roku.Comm.lPollTime)"
+			
+			IF(TIMELINE_ACTIVE(tlPolling))
+			    TIMELINE_KILL(tlPolling)
+			
+			IF(Roku.Comm.lPollTime > 0)
+			    TIMELINE_CREATE(tlPolling,lTimes,MaxPollCmds+1,TIMELINE_RELATIVE,TIMELINE_REPEAT)
+		    }
+		    ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='Progress_Poll')) : {
+			Roku.nProgressPoll = ATOI(cPara[2])
+			SEND_STRING vdvDev,"'PROPERTY-Progress_Poll,',ITOA(Roku.nProgressPoll)"
+		    }
 		    
 		    IF(Roku.Comm.lPollTime > 0)
 			TIMELINE_CREATE(tlPolling,lTimes,MaxPollCmds+1,TIMELINE_RELATIVE,TIMELINE_REPEAT)
@@ -283,7 +316,7 @@ DEFINE_EVENT
 		}
 		
 		//---When all else fails, throw up an error flag!
-		ACTIVE (1) : DebugString(1,"'ERROR - Unhandled Command'")
+		ACTIVE (1) : DebugString(AMX_ERROR,"'ERROR - Unhandled Command'")
 	    }
 	}
     }
@@ -302,7 +335,7 @@ DEFINE_EVENT
 		IP_CLIENT_CLOSE(dvDev.Port)
 		OFF[Roku.Comm.nBusy]
 		SEND_STRING vdvDev,"'ERROR-Comm Timeout'"
-		DebugString(1,"'ERROR-Comm Timed Out'")
+		DebugString(AMX_ERROR,"'ERROR-Comm Timed Out'")
 	    }
 	}
 	OFFLINE : {
@@ -310,10 +343,10 @@ DEFINE_EVENT
 	    OFF[Roku.Comm.nBusy]
 	    IF(LENGTH_STRING(Roku.Comm.cBuf)) {
 		
-		//DebugString(3,"'Sending to Parse : ',Roku.Comm.cBuf")
+		//DebugString(AMX_INFO,"'Sending to Parse : ',Roku.Comm.cBuf")
 		nPointer = 1
 		WHILE(LENGTH_STRING(DATA.TEXT)>nPointer) {
-		    DebugString(4,"'Send to Parse : ',MID_STRING(DATA.TEXT,nPointer,120)")
+		    DebugString(AMX_DEBUG,"'Send to Parse : ',MID_STRING(DATA.TEXT,nPointer,120)")
 		    nPointer = nPointer+120
 		}
 		
@@ -323,7 +356,7 @@ DEFINE_EVENT
 	}
 	STRING : {
 	    CANCEL_WAIT 'CommTimeout'
-	    //DebugString(4,"'Rx from BoxeeBox: ',DATA.TEXT")
+	    //DebugString(AMX_DEBUG,"'Rx from BoxeeBox: ',DATA.TEXT")
 	    IF(RIGHT_STRING(Roku.Comm.cBuf,7)=="$0D,$0A,'0',$0D,$0A,$0D,$0A")
 		IP_CLIENT_CLOSE(dvDev.PORT)
 	}
@@ -427,9 +460,3 @@ DEFINE_PROGRAM
 	[vdvDev,254] = Roku.Comm.nBusy
 	SendQue()
     }
-	
-    (*
-    WAIT 10
-	IF(Roku.nProgressPoll)
-	    SEND_COMMAND vdvDev,"'?NOW_PLAYING'"
-    *)
