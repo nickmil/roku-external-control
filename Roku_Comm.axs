@@ -21,9 +21,6 @@ DEFINE_TYPE
     STRUCTURE _Roku {
 	_Comm Comm			//---See notes above
 	_Debug Debug			//---See notes above
-	
-	INTEGER nProgressPoll
-	INTEGER nPlaying
     }
 
 DEFINE_VARIABLE
@@ -31,22 +28,23 @@ DEFINE_VARIABLE
     
 DEFINE_CONSTANT
     tlSendQue = 101
+    tlPolling = 102
     
 DEFINE_VARIABLE	
-    CONSTANT tlPolling = 1
-    CONSTANT MaxPollCmds = 1
     VOLATILE LONG lTenthTime[] = { 100 }
     VOLATILE LONG lTimes[] = { 500,60000 }
-    VOLATILE CHAR cPollCmds[2][32] = { '' }
+    
+    VOLATILE INTEGER MaxPollCmds
+    VOLATILE CHAR cPollCmds[][32] = { '?ACTIVE_APP' }
 
 //-----------------------------------------------------------------------------
 
 DEFINE_FUNCTION DebugString(INTEGER nLevel,CHAR cString[]) {
     //---Sends the appropriate debug strings to the console.
-    //---1-ERRORS Only
-    //---2-Asynchronous Strings from Device
-    //---3-Acks to code driven actions
-    //---4-All Data & parsing)
+    //---1-ERROR
+    //---2-WARNING
+    //---3-INFO
+    //---4-DEBUG
     
     IF(nLevel<=Roku.Debug.nDebugLevel) {
 	SEND_STRING 0,"'Roku  ',Roku.Debug.cDPS,' - ',cString"
@@ -233,6 +231,7 @@ DEFINE_EVENT
 		
 		ACTIVE (cCmd=='KEYBOARD') : AddHTTPGet("'Keypress/Lit_',cPara[1]")
 		
+		ACTIVE (cCmd=='?ACTIVE_APP') : AddHTTPGet("'query/active-app'")
 		
 		(*********************************************************************)
 		
@@ -422,10 +421,10 @@ DEFINE_EVENT
 
 DEFINE_START
     CREATE_BUFFER dvDev,Roku.Comm.cBuf
+    MaxPollCmds = LENGTH_ARRAY(cPollCmds)
+    
     Roku.Comm.nTCPPort = 8060
     Roku.Comm.nCommTimeout = 50
-    Roku.nProgressPoll = 0
-
 
 //-----------------------------------------------------------------------------
 
