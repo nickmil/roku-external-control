@@ -136,6 +136,10 @@
 <UserName></UserName>
 <Password></Password>
 <Comments></Comments>
+<File CompileType="Netlinx" Type="Include"><Identifier>SNAPI</Identifier>
+<FilePathName>..\..\..\..\..\Program Files (x86)\Common Files\AMXShare\AXIs\SNAPI.axi</FilePathName>
+<Comments></Comments>
+</File>
 <File CompileType="Netlinx" Type="Other"><Identifier>LICENSE</Identifier>
 <FilePathName>LICENSE</FilePathName>
 <Comments></Comments>
