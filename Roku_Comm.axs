@@ -430,9 +430,3 @@ DEFINE_PROGRAM
 	[vdvDev,254] = Roku.Comm.nBusy
 	SendQue()
     }
-	
-    (*
-    WAIT 10
-	IF(Roku.nProgressPoll)
-	    SEND_COMMAND vdvDev,"'?NOW_PLAYING'"
-    *)
