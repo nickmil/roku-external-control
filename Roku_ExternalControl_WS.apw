@@ -136,6 +136,14 @@
 <UserName></UserName>
 <Password></Password>
 <Comments></Comments>
+<File CompileType="Netlinx" Type="Other"><Identifier>LICENSE</Identifier>
+<FilePathName>LICENSE</FilePathName>
+<Comments></Comments>
+</File>
+<File CompileType="Netlinx" Type="Other"><Identifier>README</Identifier>
+<FilePathName>README.md</FilePathName>
+<Comments></Comments>
+</File>
 <File CompileType="Netlinx" Type="Module"><Identifier>Roku_Comm</Identifier>
 <FilePathName>Roku_Comm.axs</FilePathName>
 <Comments></Comments>
