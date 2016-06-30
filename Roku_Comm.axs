@@ -4,6 +4,7 @@ MODULE_NAME='Roku_Comm' (DEV vdvDev,DEV dvDev)
 DEFINE_TYPE
     STRUCTURE _Debug {
 	INTEGER nDebugLevel		//---Current level of debug strings sent to console (See DebugString subroutine below)
+	CHAR cDPS[32]
     }
     STRUCTURE _Comm {
 	CHAR cIPAddress[15]		//---IP Address of the Boxee Box (? Increase byte count to allow for hostnames ?)
@@ -44,7 +45,7 @@ DEFINE_FUNCTION DebugString(INTEGER nLevel,CHAR cString[]) {
     //---4-All Data & parsing)
     
     IF(nLevel<=Roku.Debug.nDebugLevel) {
-	SEND_STRING 0,"'Roku - ',cString"
+	SEND_STRING 0,"'Roku  ',Roku.Debug.cDPS,' - ',cString"
     }
 }
 
@@ -182,6 +183,8 @@ DEFINE_FUNCTION DevRx(CHAR cBuf[]) {
 DEFINE_EVENT
     DATA_EVENT [vdvDev] {
 	ONLINE : {
+	    Roku.Debug.cDPS = "ITOA(DATA.DEVICE.NUMBER),':',ITOA(DATA.DEVICE.PORT),':',ITOA(DATA.DEVICE.SYSTEM)"
+	    
 	    //---Default poll time
 	    //SEND_COMMAND vdvDev,"'PROPERTY-Poll_Time,60'"
 	}
