@@ -29,9 +29,13 @@ DEFINE_TYPE
 DEFINE_VARIABLE
     VOLATILE _Roku Roku
     
+DEFINE_CONSTANT
+    tlSendQue = 101
+    
 DEFINE_VARIABLE	
     CONSTANT tlPolling = 1
     CONSTANT MaxPollCmds = 1
+    VOLATILE LONG lTenthTime[] = { 100 }
     VOLATILE LONG lTimes[] = { 500,60000 }
     VOLATILE CHAR cPollCmds[2][32] = { '' }
 
@@ -187,6 +191,8 @@ DEFINE_EVENT
 	    
 	    //---Default poll time
 	    //SEND_COMMAND vdvDev,"'PROPERTY-Poll_Time,60'"
+	    
+	    TIMELINE_CREATE(tlSendQue,lTenthTime,1,TIMELINE_RELATIVE,TIMELINE_REPEAT)
 	}
 	COMMAND : {
 	    //---Parse commands send to the virtual from Master code.
@@ -237,7 +243,6 @@ DEFINE_EVENT
 		ACTIVE (cCmd=='PASSTHRU_GET') : {
 		    AddHTTPGet(cPara[1])
 		}
-		
 		ACTIVE (cCmd=='DEBUG') : {
 		    Roku.Debug.nDebugLevel = ATOI(cPara[1])
 		    SEND_STRING vdvDev,"'DEBUG-',cPara[1]"
@@ -246,12 +251,12 @@ DEFINE_EVENT
 		ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='IP_Address')) : {
 		    Roku.Comm.cIPAddress = cPara[2]
 		    SEND_STRING vdvDev,"'PROPERTY-IP_Address,',cPara[2]"
-		    DebugString(3,"'IP Address: ',cPara[2]")
+		    DebugString(AMX_INFO,"'IP Address: ',cPara[2]")
 		}
 		ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='TCP_Port')) : {
 		    Roku.Comm.nTCPPort = ATOI(cPara[2])
 		    SEND_STRING vdvDev,"'PROPERTY-TCP_Port,',cPara[2]"
-		    DebugString(3,"'TCP Port : ',cPara[2]")
+		    DebugString(AMX_INFO,"'TCP Port : ',cPara[2]")
 		}
 		ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='Poll_Time')) : {
 		    Roku.Comm.lPollTime = ATOI(cPara[2])*1000
@@ -260,59 +265,27 @@ DEFINE_EVENT
 		    
 		    IF(TIMELINE_ACTIVE(tlPolling))
 			TIMELINE_KILL(tlPolling)
-		    ACTIVE (cCmd=='DEBUG') : {
-			Roku.Debug.nDebugLevel = ATOI(cPara[1])
-			SEND_STRING vdvDev,"'DEBUG-',cPara[1]"
-			DebugString(0,"'DEBUG Level = ',cPara[1]")
-		    }
-		    ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='IP_Address')) : {
-			Roku.Comm.cIPAddress = cPara[2]
-			SEND_STRING vdvDev,"'PROPERTY-IP_Address,',cPara[2]"
-			DebugString(AMX_INFO,"'IP Address: ',cPara[2]")
-		    }
-		    ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='TCP_Port')) : {
-			Roku.Comm.nTCPPort = ATOI(cPara[2])
-			SEND_STRING vdvDev,"'PROPERTY-TCP_Port,',cPara[2]"
-			DebugString(AMX_INFO,"'TCP Port : ',cPara[2]")
-		    }
-		    ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='Poll_Time')) : {
-			Roku.Comm.lPollTime = ATOI(cPara[2])*1000
-			lTimes[MaxPollCmds+1] = Roku.Comm.lPollTime
-			SEND_STRING vdvDev,"'PROPERTY-Poll_Time,',ITOA(Roku.Comm.lPollTime)"
-			
-			IF(TIMELINE_ACTIVE(tlPolling))
-			    TIMELINE_KILL(tlPolling)
-			
-			IF(Roku.Comm.lPollTime > 0)
-			    TIMELINE_CREATE(tlPolling,lTimes,MaxPollCmds+1,TIMELINE_RELATIVE,TIMELINE_REPEAT)
-		    }
-		    ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='Progress_Poll')) : {
-			Roku.nProgressPoll = ATOI(cPara[2])
-			SEND_STRING vdvDev,"'PROPERTY-Progress_Poll,',ITOA(Roku.nProgressPoll)"
-		    }
 		    
 		    IF(Roku.Comm.lPollTime > 0)
 			TIMELINE_CREATE(tlPolling,lTimes,MaxPollCmds+1,TIMELINE_RELATIVE,TIMELINE_REPEAT)
 		}
-		ACTIVE ((cCmd=='PROPERTY') && (cPara[1]=='Progress_Poll')) : {
-		    Roku.nProgressPoll = ATOI(cPara[2])
-		    SEND_STRING vdvDev,"'PROPERTY-Progress_Poll,',ITOA(Roku.nProgressPoll)"
-		}
-		
 		ACTIVE (cCmd=='CLEARQUE') : {
 		    Roku.Comm.cQue = ''
 		}
-		ACTIVE (cCmd=='CLEARBUF') : {
-		    Roku.Comm.cBuf = ''
-		    OFF[Roku.Comm.nBusy]
-		}
 		ACTIVE (cCmd=='REINIT') : {
+		    ON[Roku.Comm.nBusy]
+		    
+		    IF(TIMELINE_ACTIVE(tlSendQue))
+			TIMELINE_KILL(tlSendQue)
+		    
 		    Roku.Comm.cQue = ''
 		    Roku.Comm.cBuf = ''
-		    ON[Roku.Comm.nBusy]
 		    IP_CLIENT_CLOSE(dvDev.PORT)
-		    WAIT 10
+		    
+		    WAIT 10 {
 			OFF[Roku.Comm.nBusy]
+			TIMELINE_CREATE(tlSendQue,lTenthTime,1,TIMELINE_RELATIVE,TIMELINE_REPEAT)
+		    }
 		}
 		
 		//---When all else fails, throw up an error flag!
@@ -441,6 +414,9 @@ DEFINE_EVENT
 	IF(TIMELINE.SEQUENCE<=MaxPollCmds)
 	    SEND_COMMAND vdvDev,"cPollCmds[TIMELINE.SEQUENCE]"
     }
+    TIMELINE_EVENT [tlSendQue] {
+	SendQue()
+    }
     
 //-----------------------------------------------------------------------------
 
@@ -455,8 +431,5 @@ DEFINE_START
 
 DEFINE_PROGRAM
     WAIT 1 {
-	[vdvDev,1] = Roku.nPlaying
-	
 	[vdvDev,254] = Roku.Comm.nBusy
-	SendQue()
     }
