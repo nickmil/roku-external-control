@@ -13,14 +13,20 @@ DEFINE_TYPE
 	
 	CHAR cQue[2048]			//---Que of strings waiting to be sent to device
 	CHAR cBuf[4096]			//---Buffer of Acks returned from device
-	CHAR cLastGet[512]		//---What was the last request I sent to the device?
 	INTEGER nBusy			//---Waiting for a response back from the device
 	
 	LONG lPollTime			//---How frequently should we poll (Thousandths)
     }
+    STRUCTURE _App {
+	INTEGER nID
+	CHAR cName[32]
+	CHAR cIconURL[512]
+    }
     STRUCTURE _Roku {
 	_Comm Comm			//---See notes above
 	_Debug Debug			//---See notes above
+	
+	_App ActiveApp
     }
 
 DEFINE_VARIABLE
@@ -176,6 +182,7 @@ DEFINE_FUNCTION DevRx(CHAR cBuf[]) {
 	    cHTML = MID_STRING(cBuf,nHTMLStart,(nHTMLEnd-nHTMLStart))
 	    DebugString(AMX_DEBUG,"'HTML Content - ',cHTML")
 	    
+	    #WARN 'TODO: add parsing for ?ACTIVE_APP'
 	}
     }
 }
