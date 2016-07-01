@@ -66,7 +66,7 @@ DEFINE_FUNCTION SendQue() {
     LOCAL_VAR CHAR cCmd[64]
     IF(!Roku.Comm.nBusy && FIND_STRING(Roku.Comm.cQue,"$0B,$0B",1)) {
 	ON[Roku.Comm.nBusy]
-	CALL 'OpenSocket'
+	OpenSocket()
     }
 }
 
@@ -94,7 +94,7 @@ DEFINE_FUNCTION AddHTTPGet(CHAR cShortURI[]) {
 }
 
 
-DEFINE_CALL 'OpenSocket' {
+DEFINE_FUNCTION OpenSocket() {
     //---Opens a client socket and waits for the device to come online
     //---Errors listed are those reported by AMX socket handler
 
