@@ -1,0 +1,16 @@
+  ------ NLRC.EXE - V3.1 ------------------------------------------------------
+ 
+  Using Configuration File: c:\users\nickmil\my repos\git\roku-external-control\_compile.cfg
+ 
+  ---- Starting NetLinx Compile - Version[2.5.2.420] [07-04-2016 21:16:04] -----
+ 
+  C:\Users\nickmil\My Repos\git\roku-external-control\Roku_ExternalControl_Master.axs
+  0 error(s), 0 warning(s)
+ 
+  Token and Variable Count....:     760 (Maximum is 200000)
+  Compiled Code...(with Debug):  236302 bytes of memory
+ 
+  ---- NetLinx Compile Complete [07-04-2016 21:16:04] -------------------------
+ 
+ 
+  ------  End of NLRC.EXE - V3.0  ----------------------------------------------
